@@ -9,9 +9,10 @@ const RenderMap = ({ name }) => {
                 'esri/config',
                 'esri/Map',
                 'esri/views/MapView',
-                'esri/layers/FeatureLayer'
+                'esri/layers/FeatureLayer',
+                'esri/widgets/Legend',
             ]
-        ).then(([esriConfig, Map, MapView, FeatureLayer]) => {
+        ).then(([esriConfig, Map, MapView, FeatureLayer, Legend]) => {
             esriConfig.apiKey = API;
 
             const map = new Map({
@@ -170,7 +171,7 @@ const RenderMap = ({ name }) => {
             }
 
             const myLayer = new FeatureLayer({
-                url: "https://services7.arcgis.com/J3hAXnMntfOSlR8o/ArcGIS/rest/services/export/FeatureServer/0",
+                url: "https://services7.arcgis.com/J3hAXnMntfOSlR8o/ArcGIS/rest/services/export/FeatureServer/0",               
                 popupTemplate: popupLayers
             });
             map.add(myLayer);
@@ -186,8 +187,6 @@ const RenderMap = ({ name }) => {
                 popupTemplate: popupLayers
             });
             map.add(secLayer);
-
-            console.log(myLayer);
 
             if(name === "Show Layer 1") {
                 myLayer.when(function(){
@@ -206,10 +205,6 @@ const RenderMap = ({ name }) => {
     });
     return (<div id="container"></div>);
 }
-
-// var parsel = FeatureSetByName($map,"export");
-// var counts = Count(Intersects($feature, parsel));
-// return counts;
 
 export default RenderMap;
 
