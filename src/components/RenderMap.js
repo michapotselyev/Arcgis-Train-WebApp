@@ -11,13 +11,18 @@ const RenderMap = ({ name }) => {
                 'esri/Map',
                 'esri/views/MapView',
                 'esri/layers/FeatureLayer',
+                'esri/layers/Layer',
+                'esri/widgets/Popup/PopupViewModel',
                 'esri/widgets/Legend',
             ]
-        ).then(([esriConfig, Map, MapView, FeatureLayer, Legend]) => {
+        ).then(([esriConfig, Map, MapView, FeatureLayer, Layer, PopupVM, Legend]) => {
             esriConfig.apiKey = API;
 
             const map = new Map({
-                basemap: "arcgis-topographic"
+                basemap: "arcgis-topographic",
+                // infoWindow: {
+                //     "popupWindow": false
+                // }
             });
 
             const view = new MapView({
@@ -27,11 +32,47 @@ const RenderMap = ({ name }) => {
                 container: "container"
             });
 
-            let Layer = new FeatureLayer();
-            const url = "https://mgagro.gismg.com:6443/arcgis/rest/services/PORTAL_30/MS_MAK_3/MapServer/";
-            Layer.url = url;
-            map.add(Layer);
-            CreateLayer(url);
+            let layer = new FeatureLayer();
+            const url = "https://services7.arcgis.com/J3hAXnMntfOSlR8o/ArcGIS/rest/services/export/FeatureServer/0";
+            layer.url = url;
+            map.add(layer);
+            layer.when(function(){
+                view.extent = layer.fullExtent;
+            });
+            // CreateLayer(url);
+            console.log(view.popup);
+
+            view.popup.autoOpenEnabled = false;
+            view.on("click", function (event) { 
+                document.getElementById('ms').getElementsByTagName('aside').infa.innerText = ""
+                if (event.button === 0) {
+                    view.whenLayerView(layer).then(function (layerView) {
+                        const query = layerView.layer.createQuery();
+                        query.geometry = view.toMap(event);
+                        query.distance = 1;
+                        query.units = "meters";
+                        layerView.queryFeatures(query).then(
+                            response => {
+                                if (response.features.length > 0) {
+                                    for (let i = 0; i < response.fields.length; i++) {
+                                        if (response.fields[i].type === "string") {
+                                            document.getElementById('ms').getElementsByTagName('aside').infa.innerText += JSON.stringify(response.fields[i].alias) 
+                                                                                                                        + ": " 
+                                                                                                                        + JSON.stringify(response.fields[i].name);
+                                            document.getElementById('ms').getElementsByTagName('aside').infa.innerText += "\n";
+                                        }  
+                                    }
+                                }
+                            },
+                            err => {
+                                console.error(err);
+                            }
+                        );
+                    });
+                }
+            });
+            
+            // CreateLayer(url);
            
             // if(name === "Show Layer 1") {
             //     myLayer.when(function(){

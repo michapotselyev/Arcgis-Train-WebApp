@@ -8,9 +8,14 @@ const MainSite = () => {
         setName(name);
     }
     return (
-        <main>
-            <RenderMap name={name} />
-            <MapsConfig onChange={handleNameChange} />
+        <main id='ms'>
+            <div className="mapdiv" id="mdiv">
+                <RenderMap name={name} />
+                <MapsConfig onChange={handleNameChange} />
+            </div>
+            <aside className="infomap" id="infa">
+                
+            </aside>
         </main>
     );
 }

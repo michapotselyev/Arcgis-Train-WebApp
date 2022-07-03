@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Route, Routes, BrowserRouter } from "react-router-dom";
-import './index.css';
+import './css/index.css';
 import Main from './routes/Main';
 import Tasks from './routes/Tasks';
 import Calendar from './routes/Calendar';
