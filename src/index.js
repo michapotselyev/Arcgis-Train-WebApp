@@ -8,7 +8,10 @@ import Calendar from './routes/Calendar';
 import Contacts from './routes/Contacts';
 import reportWebVitals from './reportWebVitals';
 
+// Получения места для записи компонентов в DOM
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+// Рендер собранной DOM модели 
 root.render(
   <React.StrictMode>
     <BrowserRouter>
@@ -22,4 +25,5 @@ root.render(
   </React.StrictMode>
 );
 
+// Обработка ошибок запроса-ответа
 reportWebVitals();

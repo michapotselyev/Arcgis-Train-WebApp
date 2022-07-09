@@ -1,6 +1,8 @@
 import React from "react";
 
+// Компонент шапки сайта
 const HeaderSite = () => {
+    // Отрисовка шапки сайта
     return (
         <header>
             <ul className="menu">

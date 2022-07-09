@@ -1,96 +1,97 @@
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { loadModules } from 'esri-loader';
-import { CreateLayer } from '../modules/autoCreateLayer'
 const API = "AAPK6e2e371c0cd645db955fffc84c955043hV8ZzZNODcMzp0t74BMMWQWj5Sa6Zo_y7Kdf_eTa9W3nvTZ5fcZF6qjcR0hIIPai";
 
-const RenderMap = ({ name }) => {
+// Компонент отрисовки карты и получения данных с нее
+const RenderMap = () => {
+    const [isLoaded, setIsLoaded] = useState(false);
     useEffect(() => {
+        // Загрузка нужных модулей
         loadModules(
             [
                 'esri/config',
                 'esri/Map',
                 'esri/views/MapView',
-                'esri/layers/FeatureLayer',
-                'esri/layers/Layer',
-                'esri/widgets/Popup/PopupViewModel',
-                'esri/widgets/Legend',
+                'esri/layers/FeatureLayer'
             ]
-        ).then(([esriConfig, Map, MapView, FeatureLayer, Layer, PopupVM, Legend]) => {
+        ).then(([ esriConfig, Map, MapView, FeatureLayer ]) => {
+            // Подключение API
             esriConfig.apiKey = API;
 
-            const map = new Map({
-                basemap: "arcgis-topographic",
-                // infoWindow: {
-                //     "popupWindow": false
-                // }
-            });
+            // Создание образа карты
+            const map = new Map({ basemap: "arcgis-topographic" });
 
+            // Создание окна карты и настройки отображения карты
             const view = new MapView({
                 map: map,
-                center: [28.841, 49.98],
+                center: [ 28.841, 49.98 ],
                 zoom: 8,
-                container: "container"
+                container: "container",
             });
 
-            let layer = new FeatureLayer();
-            const url = "https://services7.arcgis.com/J3hAXnMntfOSlR8o/ArcGIS/rest/services/export/FeatureServer/0";
-            layer.url = url;
-            map.add(layer);
-            layer.when(function(){
-                view.extent = layer.fullExtent;
+            // Создание слоя
+            let layerID = new FeatureLayer({
+                url: "https://services7.arcgis.com/J3hAXnMntfOSlR8o/ArcGIS/rest/services/export/FeatureServer/0",
+                outFields: ["*"]
             });
-            // CreateLayer(url);
-            console.log(view.popup);
+            map.add(layerID);
 
+            // Переход к слою
+            layerID.when(function() {
+                view.extent = layerID.fullExtent;
+            });
+
+            // Настройки отображения pop up
             view.popup.autoOpenEnabled = false;
-            view.on("click", function (event) { 
-                document.getElementById('ms').getElementsByTagName('aside').infa.innerText = ""
-                if (event.button === 0) {
-                    view.whenLayerView(layer).then(function (layerView) {
-                        const query = layerView.layer.createQuery();
-                        query.geometry = view.toMap(event);
-                        query.distance = 1;
-                        query.units = "meters";
-                        layerView.queryFeatures(query).then(
-                            response => {
-                                if (response.features.length > 0) {
-                                    for (let i = 0; i < response.fields.length; i++) {
-                                        if (response.fields[i].type === "string") {
-                                            document.getElementById('ms').getElementsByTagName('aside').infa.innerText += JSON.stringify(response.fields[i].alias) 
-                                                                                                                        + ": " 
-                                                                                                                        + JSON.stringify(response.fields[i].name);
-                                            document.getElementById('ms').getElementsByTagName('aside').infa.innerText += "\n";
-                                        }  
-                                    }
-                                }
-                            },
-                            err => {
-                                console.error(err);
-                            }
-                        );
-                    });
-                }
-            });
-            
-            // CreateLayer(url);
-           
-            // if(name === "Show Layer 1") {
-            //     myLayer.when(function(){
-            //         view.extent = myLayer.fullExtent;
-            //     });
-            // }
-            // if(name === "Show Layer 2") {
-            //     secLayer.when(function(){
-            //         view.extent = secLayer.fullExtent;
-            //     });
-            // }
-            // view.center = [28.841, 49.98];
-            // view.zoom = 8;
 
+            setIsLoaded(true);
+
+            // Получение данных с сервиса и обработка при нажатии на поле
+            view.on("click", function (event) { 
+                view.hitTest(event).then(function (response) { 
+                    if (response.results.length !== 1) {
+                        var graphic = response.results.filter(function (result) { 
+                            return result.graphic.layer === layerID; 
+                        })[0].graphic;
+                        const attributes = graphic.attributes;
+                        view.popup.open({ location: graphic.geometry.centroid, features: [graphic] });
+                        const placeTo =  document.getElementById('infa').children;
+                        for (let j = 0; j < placeTo.length; j++) {
+                            if (placeTo[j].id === "textfield") {
+                                placeTo[j].innerText = "Кадастровый номер: " + attributes.cadnum + "\n" +
+                                                       "Назначение: " + attributes.category + "\n" +
+                                                       "Использование: " + attributes.use_ + "\n" +
+                                                       "Площадь: " + attributes.area +  attributes.unit_area + "\n" +
+                                                       "Собственность: " + attributes.ownership + "\n";
+                            }
+                        }
+                    }
+                    else {
+                        view.popup.close();
+                    }
+                }); 
+            });
+
+        // Обработка ошибок
         }).catch((err) => console.error(err));
     });
-    return (<div id="container"></div>);
+
+    // Отрисовка блока и карты в нем
+    if (!isLoaded) {
+        return (
+            <div className="mapdiv" id="mdiv">
+                <div>Загрузка...</div>
+            </div>
+        )
+    }
+    else {
+        return (
+            <div className="mapdiv" id="mdiv">
+                <div id="container"></div>
+            </div>
+        );
+    }
+    
 }
 
 export default RenderMap;
-
