@@ -1,9 +1,41 @@
 import React, { useEffect, useState } from "react";
+import { data } from "../modules/searchAndShowInfo";
 const urlToGetData = 
 "https://services7.arcgis.com/J3hAXnMntfOSlR8o/ArcGIS/rest/services/export/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=false&resultRecordCount=0&f=json";
+var prev = { storage: "", id: "" }
+var flag = false;
 
 // Компонент таблицы карты
 const MapTable = () => {
+
+    data.registerListener(function(val) {
+        if (val !== "") {
+            if (document.getElementById(val)) {
+                const place = document.getElementById(val);
+                if (prev.storage !== "") {
+                    document.getElementById(prev.id).className = prev.storage;
+                }
+                if (!flag) {
+                    place.previousSibling.scrollIntoView();
+                }
+                flag = false;
+                prev.storage = place.className;
+                prev.id = val;
+                place.className = "edit " + place.className;
+            }
+            else {
+                if (prev.storage !== "") {
+                    document.getElementById(prev.id).className = prev.storage;
+                }
+            }
+        }
+        else {
+            if (prev.storage !== "") {
+                document.getElementById(prev.id).className = prev.storage;
+            }
+        }
+    });
+
     const [error, setError] = useState(null);
     const [isLoaded, setIsLoaded] = useState(false);
     const [items, setItems] = useState([]);
@@ -19,7 +51,7 @@ const MapTable = () => {
             setIsLoaded(true);
             setError(error);
         })
-    }, [])
+    }, []);
 
     const newArray = items.filter(function(f) { 
         return (
@@ -36,7 +68,7 @@ const MapTable = () => {
 
     var con = -1;
     const head = newArray.map(item => (<th key={item.name}>{item.name}</th>));
-    const bady = itemsVal.map(items => <tr key={items.attributes.ObjectId}>
+    const bady = itemsVal.map(items => <tr key={items.attributes.cadnum} id={items.attributes.cadnum} className={"a" + (con + 1)}>
                                             <th>{con += 1}</th>
                                             <th>{items.attributes.cadnum}</th>
                                             <th>{items.attributes.category}</th>

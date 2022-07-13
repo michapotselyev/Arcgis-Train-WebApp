@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { loadModules } from 'esri-loader';
+import { data } from '../modules/searchAndShowInfo';
+var isOpened = false;
 const API = "AAPK6e2e371c0cd645db955fffc84c955043hV8ZzZNODcMzp0t74BMMWQWj5Sa6Zo_y7Kdf_eTa9W3nvTZ5fcZF6qjcR0hIIPai";
 
 // Компонент отрисовки карты и получения данных с нее
@@ -47,29 +49,50 @@ const RenderMap = () => {
             setIsLoaded(true);
 
             // Получение данных с сервиса и обработка при нажатии на поле
-            view.on("click", function (event) { 
-                view.hitTest(event).then(function (response) { 
-                    if (response.results.length !== 1) {
-                        var graphic = response.results.filter(function (result) { 
-                            return result.graphic.layer === layerID; 
-                        })[0].graphic;
-                        const attributes = graphic.attributes;
-                        view.popup.open({ location: graphic.geometry.centroid, features: [graphic] });
-                        const placeTo =  document.getElementById('infa').children;
-                        for (let j = 0; j < placeTo.length; j++) {
-                            if (placeTo[j].id === "textfield") {
-                                placeTo[j].innerText = "Кадастровый номер: " + attributes.cadnum + "\n" +
-                                                       "Назначение: " + attributes.category + "\n" +
-                                                       "Использование: " + attributes.use_ + "\n" +
-                                                       "Площадь: " + attributes.area +  attributes.unit_area + "\n" +
-                                                       "Собственность: " + attributes.ownership + "\n";
+            view.on("click", function (event) {
+                if (event.button === 0) {
+                    view.hitTest(event).then(function (response) {
+                        if (!isOpened) {
+                            view.popup.close();
+                            const placeTo =  document.getElementById('infa').children;
+                            for (let j = 0; j < placeTo.length; j++) if (placeTo[j].id === "textfield") placeTo[j].innerText = "";
+                        }
+                        if (response.results.length !== 1) {
+                            var graphic = response.results.filter(function(result) {
+                                return result.graphic.layer === layerID;
+                            })[0].graphic;
+                            if (data.a === graphic.attributes.cadnum) {
+                                view.popup.close();
+                                const placeTo =  document.getElementById('infa').children;
+                                for (let j = 0; j < placeTo.length; j++) if (placeTo[j].id === "textfield") placeTo[j].innerText = "";
+                                data.a = "";
+                            }
+                            else {
+                                data.a = graphic.attributes.cadnum;
+                                const attributes = graphic.attributes;
+                                view.popup.open({ location: graphic.geometry.centroid, features: [graphic] });
+                                isOpened = true;
+                                const placeTo =  document.getElementById('infa').children;
+                                for (let j = 0; j < placeTo.length; j++) {
+                                    if (placeTo[j].id === "textfield") {
+                                        placeTo[j].innerText = "Кадастровый номер: " + attributes.cadnum + "\n" +
+                                                               "Назначение: " + attributes.category + "\n" +
+                                                               "Использование: " + attributes.use_ + "\n" +
+                                                               "Площадь: " + attributes.area +  attributes.unit_area + "\n" +
+                                                               "Собственность: " + attributes.ownership + "\n";
+                                
+                                    }
+                                }
                             }
                         }
-                    }
-                    else {
-                        view.popup.close();
-                    }
-                }); 
+                        else {
+                            view.popup.close();
+                            const placeTo =  document.getElementById('infa').children;
+                            for (let j = 0; j < placeTo.length; j++) if (placeTo[j].id === "textfield") placeTo[j].innerText = "";
+                            data.a = "";
+                        }
+                    });
+                }
             });
 
         // Обработка ошибок
